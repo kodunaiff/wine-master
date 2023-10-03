@@ -20,19 +20,19 @@ def get_correct_year(year):
         return 'лет'
 
 
-def get_directory(wine_file):
+def get_directory(file_path_wine):
     parser = argparse.ArgumentParser(
         description='Запускает сайт с винной продукцией'
     )
     parser.add_argument(
         '-p',
-        '--wine_file',
+        '--file_path_wine',
         help='give me path and file with wines',
         type=str,
-        default=wine_file
+        default=file_path_wine
     )
     args = parser.parse_args()
-    return args.wine_file
+    return args.file_path_wine
 
 
 def main():
@@ -44,21 +44,24 @@ def main():
     template = env.get_template('template.html')
 
     load_dotenv()
-    wine_file = os.getenv('PATH_WINE_FILE')
+    file_path_wine = os.getenv('FILE_PATH_WINE')
 
     now = datetime.datetime.now()
-    company_age = now.year - 1920
+    year_of_foundation = 1920
+    company_age = now.year - year_of_foundation
 
-    wines_db = pandas.read_excel(get_directory(wine_file),
-                                 na_values='None', keep_default_na=False)
-    wines = wines_db.to_dict(orient='records')
+    production_wine = pandas.read_excel(get_directory(file_path_wine),
+                                        na_values='None',
+                                        keep_default_na=False)
+    wines = production_wine.to_dict(orient='records')
     group_wines = collections.defaultdict(list)
     for wine in wines:
         group_wines[wine['Категория']].append(wine)
 
     rendered_page = template.render(
         group_wines=group_wines,
-        time_title=f'Уже {company_age} {get_correct_year(str(company_age))} с вами',
+        time_title=f'Уже {company_age} '
+                   f'{get_correct_year(str(company_age))} с вами',
     )
 
     with open('index.html', 'w', encoding="utf8") as file:
